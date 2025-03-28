@@ -2,121 +2,60 @@ import time
 import matplotlib.pyplot as plt
 from MA.SMA import SMA
 from MA.EMA import EMA
+from test_price import testSOL
 
-def testSMA():
+def SpotTestSMA(price_data):
     print("Тест SMA")
-    # Задаем размеры окон скользящих средних
-    window_short = 3
-    window_long = 7
+    sma_indicator = SMA()
+    data_test, data_train = price_data[:100], price_data[100:]
+    
+    top_result, top_short, top_long = 0, 0, 0
 
-    # Задаем список начальных цен
-    initial_prices = [10.5, 12, 15.3, 13, 16.8, 14, 17.1, 19, 18.5, 20]
+    for window_long in range(20, 201, 20):
+        for window_short in range(5, 26, 5):
+            sma_indicator.get_updata(window_short=window_short, window_long=window_long, data_price=data_test)
 
-    starttime = time.time()
-    # Создаем экземпляр класса SMA с начальными ценами
-    sma_indicator = SMA(window_short=window_short, window_long=window_long, data_price=initial_prices)
+            buy_price = 0
+            history_price = []
+            for price in data_train:
+                indicator = sma_indicator.calculate_sma(price)
+                # print(f"Indicator: {indicator} | Price: {price}")
+                if indicator == "Buy" and buy_price == 0:
+                    buy_price = price
+                elif indicator == "Sell" and buy_price != 0:
+                    history_price.append(["sell", buy_price, price, price - buy_price])
+                    buy_price = 0
+                # Условие для тейк-профита (фиксируем прибыль при +5%)
+                elif buy_price != 0 and price >= buy_price * 1.05:
+                    history_price.append(["take_profit", buy_price, price, round(price - buy_price, 2)])
+                    buy_price = 0
+                # Условие для стоп-лосса (фиксируем убыток при -5%)
+                elif buy_price != 0 and price <= buy_price * 0.95:
+                    history_price.append(["stop_loss", buy_price, price, round(price - buy_price, 2)])
+                    buy_price = 0
+            
+            result_price = 0
+            for i in history_price:
+                # print(f"Причина: {i[0]} | Цена покупки: {i[1]} | Цена продажи: {i[2]} | Разница: {i[3]}")
+                result_price+=i[3]
+            print(f"Итог: {result_price} | Окно Short: {window_short} | Окно Long: {window_long}")
+            if top_result<result_price:
+                top_result, top_short, top_long = result_price, window_short, window_long
+    print(f"Лучшая комбинация short: {top_short} | long: {top_long}. Прибыль: {top_result}")
 
-    print(f"Начальные цены: {initial_prices}")
 
-    # Задаем 10 новых цен для добавления
-    new_prices = [22.2, 21, 10, 25, 24.9, 26, 28.4, 27, 29.1, 30]
-
-    print("\nДобавление новых цен и сигналы:")
-    for price in new_prices:
-        signal = sma_indicator.calculate_sma(price)
-        print(f"Новая цена: {price}, Сигнал: {signal}")
-
-    print(f"\nИстория всех цен: {sma_indicator.data_price}")
-    endtime = time.time()
-    print(f"Время выполнения: {endtime-starttime}")
-
-def testEMA():
+def testEMA(price_data):
     print("Тест EMA")
-    # Пример исторических данных (цены)
-    data_price = [100.5 , 102, 105, 108, 107, 110, 115.1, 118, 120, 125]
-    starttime = time.time()
-    # Создаем объект класса EMA
-    ema = EMA()
+    ema_indicator = EMA()
+    data_test, data_train = price_data[:100], price_data[100:]
 
-    # Инициализация с коротким и длинным периодами, а также историческими данными
-    ema.get_updata(window_short=3, window_long=5, data_price=data_price)
+    ema_indicator.get_updata()
 
-    # Тестирование расчетов EMA с новыми поступающими ценами
-    new_prices = [126, 127, 124, 122.2, 121, 119, 118, 117.9, 116]
-    list_short_1 = []
-    list_long_1 = []
-    # Вывод торговых сигналов для каждой новой цены
-    for price in new_prices:
-        signal = ema.calculator_ema(price)
-        list_short_1.append(ema.previous_EMA_short)
-        list_long_1.append(ema.previous_EMA_long)
-        print(f"Цена: {price}, Сигнал: {signal}")
-
-    # x1 = range(len(data_price))
-    # x2 = [i + 3 for i in range(len(list_short_1))]
-    # x3 = [i + 5 for i in range(len(list_long_1))]
-    # # Построение графика
-    # plt.figure(figsize=(10, 6))  # Устанавливаем размер графика (необязательно)
-
-    # plt.plot(x1, data_price, label='price', marker='o')
-    # plt.plot(x2, list_short_1, label='short (начинается с индекса {})'.format(3), marker='x')
-    # plt.plot(x3, list_long_1, label='long (начинается с индекса {})'.format(5), marker='s')
-
-    # # Добавление подписей к осям и заголовка
-    # plt.xlabel('Индекс')
-    # plt.ylabel('Значение')
-    # plt.title('График трех списков')
-
-    # # Добавление легенды
-    # plt.legend()
-
-    # # Включение сетки (необязательно)
-    # plt.grid(True)
-
-    # # Отображение графика
-    # plt.show()
-
-    # Пример обновления данных с изменением окон
-    ema.get_updata(window_short=4, window_long=6, data_price=data_price)
-
-    # Тестирование расчетов EMA с новыми параметрами окон
-    print("\nПосле изменения параметров окон:")
-    new_prices = [130, 132, 134, 135, 137, 138, 139, 140]
-    list_short_2 = []
-    list_long_2 = []
-    for price in new_prices:
-        signal = ema.calculator_ema(price)
-        list_short_2.append(ema.previous_EMA_short)
-        list_long_2.append(ema.previous_EMA_long)
-        print(f"Цена: {price}, Сигнал: {signal}")
-    print(f"\nИстория всех цен: {ema.data_price}")
-    endtime = time.time()
-    print(f"Время выполнения: {endtime-starttime}")
-
-    # # Построение графика
-    # plt.figure(figsize=(8, 6))  # Устанавливаем размер графика (необязательно)
-
-    # plt.plot(range(len(data_price)), data_price, label='Список 1', marker='o')
-    # plt.plot(range(len(list_short_2)), list_short_2, label='Список 2', marker='x')
-    # plt.plot(range(len(list_long_2)), list_long_2, label='Список 3', marker='s')
-
-    # # Добавление подписей к осям и заголовка
-    # plt.xlabel('Индекс')
-    # plt.ylabel('Значение')
-    # plt.title('График трех списков')
-
-    # # Добавление легенды
-    # plt.legend()
-
-    # # Включение сетки (необязательно)
-    # plt.grid(True)
-
-    # # Отображение графика
-    # plt.show()
 
 def main():
-    # testSMA()
-    testEMA()
+    test_price = testSOL()
+    SpotTestSMA(test_price)
+    # testEMA()
 
 if __name__ == "__main__":
     main()
