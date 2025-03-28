@@ -45,6 +45,36 @@ class EMA:
         self.K_short = 2 / (self.window_short + 1) # Рассчитываем сглаживающий коэффициент для короткой EMA
         self.K_long = 2 / (self.window_long + 1)  # Рассчитываем сглаживающий коэффициент для длинной EMA
 
+    def one_window_ema(self, win_size: int, price: float, data_price: list, previous_EMA_short: float):
+        """
+        Рассчитывает экспоненциальную скользящую среднюю (EMA) за один период.
+
+        Если `previous_EMA_short` отсутствует, то сначала вычисляется начальное значение EMA как 
+        простое скользящее среднее (SMA) за `win_size` последних значений.
+
+        Args:
+            win_size (int): Длина окна для расчета EMA.
+            price (float): Новая поступившая цена.
+            data_price (list): Список исторических цен.
+            previous_EMA_short (float): Предыдущее значение EMA.
+
+        Returns:
+            float: Значение EMA после обновления или None, если данных недостаточно.
+        """
+        if previous_EMA_short in None:
+            len_data_price = len(data_price)
+            if len_data_price < win_size+1:
+                return None
+            start_short = len(data_price) - win_size
+            previous_EMA_short = sum(data_price[start_short:len_data_price]) / win_size
+
+
+        K = 2 / win_size + 1
+
+        ema_short = (price * K) + previous_EMA_short * (1 - K)
+
+        return ema_short
+    
     def calculator_ema(self, price: float):
         """
         Рассчитывает значения короткой и длинной EMA для новой цены и генерирует торговый сигнал.

@@ -33,6 +33,35 @@ class SMA:
         self.window_long = window_long
         self.data_price = data_price if data_price is not None else []
 
+    def one_window_sma(self, win_size: int, price: float, data_price: list):
+        """
+        Рассчитывает простую скользящую среднюю (SMA) для заданного окна.
+
+        Метод проверяет, достаточно ли данных для расчёта, и вычисляет SMA 
+        как среднее арифметическое последних win_size цен.
+
+        Аргументы:
+            win_size (int): Длина окна скользящей средней.
+            price (float): Последняя добавленная цена (не используется в расчёте внутри метода).
+            data_price (list): Список исторических цен.
+
+        Возвращаемое значение:
+            float | None: Значение SMA, если данных достаточно, иначе None.
+        """
+        len_data_price = len(data_price)
+
+        # Проверяем, достаточно ли данных для расчёта SMA
+        if len_data_price < win_size:
+            return None  # Недостаточно данных
+
+        # Определяем начало окна
+        start_long = len(data_price) - win_size
+
+        # Вычисляем SMA как среднее арифметическое цен в окне
+        long_sma = sum(data_price[start_long:len_data_price]) / win_size
+
+        return long_sma
+
     def calculate_sma(self, price: float):
         """
         Добавляет новую цену в список цен и рассчитывает сигналы покупки или продажи на основе пересечения 
