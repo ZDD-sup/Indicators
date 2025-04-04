@@ -1,10 +1,26 @@
+from test_price import testSOL
 import time
 import matplotlib.pyplot as plt
+
+from moment_indicators.RSI import RSI
 from MA.SMA import SMA
 from MA.EMA import EMA
 from MA.SMA_EMA import SEMA
 from MA.WMA import WMA
-from test_price import testSOL
+
+def testRSI(price_data):
+    data_test, data_train = price_data[:100], price_data[100:]
+
+    indicator_rsi = RSI()
+
+    indicator_rsi.initialize_rsi(14, data_train)
+
+    for price in data_test:
+        rsi_value = indicator_rsi.update_price(price)
+        if rsi_value>=70:
+            print(f"Возможно падение. Рынок перекуплен RSI: {rsi_value:.2f}")
+        elif rsi_value<=30:
+            print(f"Возможен рост. Рынок перепродан RSI: {rsi_value:.2f}")
 
 def SpotTestSMA(price_data):
     print("Тест SMA")
@@ -170,7 +186,8 @@ def main():
     # SpotTestSMA(test_price)
     # testEMA(test_price)
     # testSEMA(test_price)
-    testWMA(test_price)
+    # testWMA(test_price)
+    testRSI(test_price)
 
 if __name__ == "__main__":
     main()
